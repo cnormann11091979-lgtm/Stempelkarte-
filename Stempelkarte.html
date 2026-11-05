@@ -1,0 +1,401 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Stempelkarte</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#1f2a44">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: eine schmale Karte wie eine Stempelkarte, oben die große Stempeltaste, darunter Register für Übersicht und Einstellungen */
+:root{
+  --paper:#eef1f6; --card:#ffffff; --ink:#1c2333; --muted:#5d6678; --line:#d7dce6;
+  --stamp:#b3263c; --stamp-ink:#ffffff; --go:#1f7a4d; --soft:#e4e8f0;
+  --head:#1f2a44; --head-fg:#f3f5fa;
+  --f-ui:"Familjen Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11151e; --card:#1a2030; --ink:#e7eaf2; --muted:#9aa3b6; --line:#2c3447;
+  --stamp:#e0566b; --stamp-ink:#160a0d; --go:#4cc28a; --soft:#232a3c;
+  --head:#0b0e15; --head-fg:#e7eaf2; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11151e; --card:#1a2030; --ink:#e7eaf2; --muted:#9aa3b6; --line:#2c3447;
+  --stamp:#e0566b; --stamp-ink:#160a0d; --go:#4cc28a; --soft:#232a3c;
+  --head:#0b0e15; --head-fg:#e7eaf2; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--head)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--head);color:var(--head-fg)}
+header .wrap{padding-block:18px 14px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:1.35rem;font-weight:700;letter-spacing:.01em}
+.who{font-size:.9rem;opacity:.8}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--head)}
+nav .wrap{display:flex;gap:4px}
+nav button{flex:1;background:none;border:0;color:var(--head-fg);opacity:.65;font:600 .95rem var(--f-ui);padding:12px 4px;border-bottom:3px solid transparent;cursor:pointer}
+nav button[aria-selected="true"]{opacity:1;border-bottom-color:var(--stamp)}
+main .wrap{padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.label{font-size:.75rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.notice{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:.95rem}
+.notice b{font-weight:700}
+/* Stempelbereich */
+.clock{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:26px}
+.state{font-weight:600;font-size:1rem}
+.state .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted);margin-right:8px;vertical-align:middle}
+.state.on .dot{background:var(--go)}
+.timer{font-size:2.6rem;font-weight:600;letter-spacing:.02em}
+.stampbtn{width:min(240px,70vw);aspect-ratio:1;max-width:100%;border-radius:50%;border:0;cursor:pointer;
+  background:var(--go);color:#fff;font:700 1.45rem var(--f-ui);box-shadow:0 6px 0 color-mix(in srgb,var(--go) 60%,#000);transition:transform .08s}
+.stampbtn.out{background:var(--stamp);color:var(--stamp-ink);box-shadow:0 6px 0 color-mix(in srgb,var(--stamp) 60%,#000)}
+.stampbtn:active{transform:translateY(4px)}
+.stampbtn small{display:block;font:500 .85rem var(--f-ui);opacity:.9;margin-top:4px}
+.today{font-size:.92rem;color:var(--muted)}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font:inherit;font-size:.9rem;cursor:pointer;padding:4px}
+/* Liste */
+.month{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.month h2{margin:0;font-size:1.15rem}
+.iconbtn{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.1rem;cursor:pointer}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-top:12px;margin-top:4px;border-top:2px solid var(--ink)}
+.total .num{font-size:1.4rem;font-weight:600}
+ul.entries{list-style:none;margin:0;padding:0}
+ul.entries li{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:12px 0;border-bottom:1px dashed var(--line);align-items:start}
+.e-date{font-family:var(--f-num);font-size:.9rem;font-weight:600;min-width:62px}
+.e-main{min-width:0}
+.e-time{font-family:var(--f-num);font-size:.85rem;color:var(--muted)}
+.e-why{overflow-wrap:anywhere}
+.e-min{font-family:var(--f-num);font-weight:600;text-align:right}
+.e-del{grid-column:3;background:none;border:0;color:var(--muted);font-size:.8rem;cursor:pointer;text-decoration:underline;padding:0}
+.empty{color:var(--muted);text-align:center;padding:18px 8px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{flex:1 1 160px;padding:13px 16px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 1rem var(--f-ui);cursor:pointer}
+.btn.primary{background:var(--head);color:var(--head-fg);border-color:var(--head)}
+:root[data-theme="dark"] .btn.primary{background:var(--stamp);color:var(--stamp-ink);border-color:var(--stamp)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{background:var(--stamp);color:var(--stamp-ink);border-color:var(--stamp)}}
+.sent{font-size:.88rem;color:var(--go);font-weight:600}
+pre.mailtext{white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--f-num);font-size:.82rem;background:var(--soft);border-radius:10px;padding:12px;margin:0;max-height:260px;overflow:auto}
+/* Formulare */
+form{display:flex;flex-direction:column;gap:14px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:.92rem}
+input,textarea,select{font:400 1rem var(--f-ui);padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+input[type="time"]{font-family:var(--f-num)}
+textarea{min-height:90px;resize:vertical}
+.week{display:flex;flex-direction:column;gap:8px}
+.day{display:grid;grid-template-columns:52px auto 1fr 1fr;gap:8px;align-items:center}
+.day .dname{font-weight:700}
+.day input[type="checkbox"]{width:22px;height:22px;accent-color:var(--go)}
+.day.off input[type="time"]{opacity:.35}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+.nfc{display:flex;gap:8px;align-items:center}
+.nfc code{flex:1;min-width:0;overflow-wrap:anywhere;font-family:var(--f-num);font-size:.8rem;background:var(--soft);padding:9px;border-radius:8px}
+:focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
+/* Dialog */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(10,14,22,.55);display:flex;align-items:flex-end;justify-content:center;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet{background:var(--card);color:var(--ink);border-radius:18px;padding:20px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow:auto}
+.sheet h3{margin:0;font-size:1.2rem}
+.big{font-family:var(--f-num);font-size:2rem;font-weight:600;color:var(--stamp)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--ink);color:var(--paper);padding:11px 16px;border-radius:10px;font-weight:600;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header><div class="wrap"><h1>Stempelkarte</h1><span class="who" id="who"></span></div></header>
+<nav><div class="wrap" role="tablist">
+  <button id="tab-stempeln" role="tab" aria-selected="true" data-view="stempeln">Stempeln</button>
+  <button id="tab-monat" role="tab" aria-selected="false" data-view="monat">Monat</button>
+  <button id="tab-einstellungen" role="tab" aria-selected="false" data-view="einstellungen">Einstellungen</button>
+</div></nav>
+
+<main><div class="wrap">
+
+<section id="v-stempeln">
+  <div class="notice" id="setupHint" hidden>Bitte trag zuerst unter <b>Einstellungen</b> deinen Namen, deine Arbeitszeiten und die Adresse für die Monatsübersicht ein.</div>
+  <div class="notice" id="monthHint" hidden></div>
+  <div class="card clock">
+    <div class="state" id="state"><span class="dot"></span><span id="stateText">Nicht eingestempelt</span></div>
+    <div class="timer num" id="timer">0:00:00</div>
+    <button class="stampbtn" id="stampBtn" type="button">Einstempeln<small>Arbeit beginnen</small></button>
+    <div class="today" id="today"></div>
+    <button class="linkbtn" id="cancelBtn" type="button" hidden>Versehentlich eingestempelt? Abbrechen</button>
+  </div>
+  <div class="card">
+    <div class="label">So funktioniert es</div>
+    <p style="margin:.5em 0 0">Ein- und ausstempeln genügt. Die App kennt deine regulären Zeiten. Alles davor, danach und am freien Tag zählt als Überstunden. Dann fragt sie nach dem Grund und notiert den Eintrag. Am Monatsende schickst du die Übersicht unter <b>Monat</b> mit einem Tippen los.</p>
+  </div>
+</section>
+
+<section id="v-monat" hidden>
+  <div class="card">
+    <div class="month">
+      <button class="iconbtn" id="prevM" type="button" aria-label="Vorheriger Monat">‹</button>
+      <h2 id="mTitle"></h2>
+      <button class="iconbtn" id="nextM" type="button" aria-label="Nächster Monat">›</button>
+    </div>
+    <ul class="entries" id="list"></ul>
+    <div class="total"><span class="label">Überstunden gesamt</span><span class="num" id="sum">0:00 Std.</span></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <div class="label">An das Sekretariat</div>
+    <div class="row">
+      <button class="btn primary" id="mailBtn" type="button">Per Mail senden</button>
+      <button class="btn" id="copyBtn" type="button">Text kopieren</button>
+    </div>
+    <div class="sent" id="sentInfo" hidden></div>
+    <pre class="mailtext" id="mailText"></pre>
+    <p class="hint">Öffnet sich kein Mailprogramm, kopiere den Text und füg ihn in eine neue Mail ein.</p>
+  </div>
+  <div class="card">
+    <div class="label">Vergessen zu stempeln?</div>
+    <form id="addForm" style="margin-top:12px">
+      <label class="f">Datum<input type="date" id="addDate" required></label>
+      <div class="row">
+        <label class="f" style="flex:1">Von<input type="time" id="addFrom" required></label>
+        <label class="f" style="flex:1">Bis<input type="time" id="addTo" required></label>
+      </div>
+      <label class="f">Grund<input type="text" id="addWhy" placeholder="z. B. Elternabend" required></label>
+      <button class="btn" type="submit">Nachtragen</button>
+    </form>
+  </div>
+</section>
+
+<section id="v-einstellungen" hidden>
+  <div class="card">
+    <form id="setForm">
+      <label class="f">Dein Name<input type="text" id="sName" placeholder="Vor- und Nachname" autocomplete="name"></label>
+      <label class="f">E-Mail des Sekretariats<input type="email" id="sMail" placeholder="sekretariat@schule.de"></label>
+      <div>
+        <div class="label" style="margin-bottom:8px">Reguläre Arbeitszeiten</div>
+        <div class="week" id="week"></div>
+        <p class="hint" style="margin-top:8px">Haken weg bedeutet freier Tag. Dann zählt dort jede Minute als Überstunde.</p>
+      </div>
+      <button class="btn primary" type="submit">Speichern</button>
+    </form>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <div class="label">NFC-Sticker</div>
+    <p class="hint">Diesen Link auf einen NFC-Sticker schreiben, zum Beispiel mit der App „NFC Tools“. Beim Antippen öffnet sich die Seite und stempelt sofort.</p>
+    <div class="nfc"><code id="nfcLink"></code><button class="iconbtn" id="nfcCopy" type="button" aria-label="Link kopieren">⧉</button></div>
+  </div>
+  <div class="card">
+    <div class="label">Deine Daten</div>
+    <p class="hint" style="margin-top:6px">Alle Einträge bleiben nur auf diesem Handy, in diesem Browser. Nichts wird an einen Server geschickt. Wer die Browserdaten löscht, löscht auch die Stempelkarte.</p>
+  </div>
+</section>
+
+</div></main>
+
+<div class="overlay" id="dlg" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <h3 id="dlgTitle">Überstunden erfasst</h3>
+    <div class="big" id="dlgMin"></div>
+    <div class="e-time" id="dlgDetail"></div>
+    <label class="f">Warum hast du länger gearbeitet?<textarea id="dlgWhy" placeholder="z. B. Dienstbesprechung, Elterngespräch, Ausflug"></textarea></label>
+    <div class="row">
+      <button class="btn" id="dlgSkip" type="button">Nicht speichern</button>
+      <button class="btn primary" id="dlgSave" type="button">Speichern</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const KEY="stempelkarte.v1";
+const DAYS=["So","Mo","Di","Mi","Do","Fr","Sa"];
+const ORDER=[1,2,3,4,5,6,0];
+const MONTHS=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const DEFAULT_SCHED={1:{on:true,s:"12:00",e:"17:15"},2:{on:true,s:"12:00",e:"16:15"},3:{on:true,s:"11:00",e:"16:15"},4:{on:true,s:"10:15",e:"18:15"},5:{on:true,s:"12:00",e:"16:15"},6:{on:false,s:"09:00",e:"13:00"},0:{on:false,s:"09:00",e:"13:00"}};
+
+let S={name:"",mail:"",sched:DEFAULT_SCHED,configured:false,active:null,entries:[],sent:{}};
+try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast("Speichern im Browser nicht möglich");}}
+
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m;};
+const hm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
+const dm=d=>pad(d.getDate())+"."+pad(d.getMonth()+1)+".";
+const fmtDur=min=>Math.floor(min/60)+":"+pad(min%60)+" Std.";
+const ymKey=d=>d.getFullYear()+"-"+pad(d.getMonth()+1);
+const truncMin=d=>{const x=new Date(d);x.setSeconds(0,0);return x;};
+
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2800);}
+
+/* Überstunden = gearbeitete Zeit außerhalb der regulären Zeiten, auch über Mitternacht und am Wochenende */
+function overtime(start,end){
+  const ov=(a1,a2,b1,b2)=>Math.max(0,Math.min(a2,b2)-Math.max(a1,b1));
+  const s=+start,e=+end;let early=0,late=0,free=0;
+  const d=new Date(start);d.setHours(0,0,0,0);
+  while(+d<e){
+    const day0=+d,next=new Date(d);next.setDate(next.getDate()+1);const day1=+next;
+    const sc=S.sched[d.getDay()];
+    if(sc&&sc.on){
+      const rs=day0+toMin(sc.s)*60000,re=day0+toMin(sc.e)*60000;
+      early+=ov(s,e,day0,rs);late+=ov(s,e,re,day1);
+    }else free+=ov(s,e,day0,day1);
+    d.setTime(day1);
+  }
+  const r=x=>Math.round(x/60000);
+  return{early:r(early),late:r(late),free:r(free),total:r(early)+r(late)+r(free)};
+}
+
+/* Ansichten */
+function show(v){
+  ["stempeln","monat","einstellungen"].forEach(n=>{$("v-"+n).hidden=n!==v;$("tab-"+n).setAttribute("aria-selected",n===v);});
+  if(v==="monat")renderMonth();if(v==="einstellungen")renderSettings();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
+
+/* Stempeln */
+function renderClock(){
+  $("who").textContent=S.name||"";
+  $("setupHint").hidden=S.configured;
+  const on=!!S.active;
+  $("state").classList.toggle("on",on);
+  $("stateText").textContent=on?"Eingestempelt seit "+hm(new Date(S.active))+" Uhr":"Nicht eingestempelt";
+  $("stampBtn").className="stampbtn"+(on?" out":"");
+  $("stampBtn").innerHTML=on?"Ausstempeln<small>Feierabend</small>":"Einstempeln<small>Arbeit beginnen</small>";
+  $("cancelBtn").hidden=!on;
+  const now=new Date(),sc=S.sched[now.getDay()];
+  $("today").textContent=DAYS[now.getDay()]+", "+dm(now)+"  ·  "+(sc&&sc.on?"Dienst heute "+sc.s+" bis "+sc.e+" Uhr":"Heute frei laut Plan");
+  // Hinweis auf noch nicht gesendeten Vormonat
+  const prev=new Date(now.getFullYear(),now.getMonth()-1,1),k=ymKey(prev);
+  const hasPrev=S.entries.some(x=>x.ym===k);
+  if(now.getDate()<=7&&hasPrev&&!S.sent[k]){$("monthHint").hidden=false;$("monthHint").innerHTML="Die Übersicht für <b>"+MONTHS[prev.getMonth()]+"</b> ist noch nicht gesendet. Du findest sie unter <b>Monat</b>.";}
+  else $("monthHint").hidden=true;
+  tick();
+}
+function tick(){
+  if(!S.active){$("timer").textContent="0:00:00";return;}
+  const sec=Math.max(0,Math.floor((Date.now()-new Date(S.active))/1000));
+  $("timer").textContent=Math.floor(sec/3600)+":"+pad(Math.floor(sec/60)%60)+":"+pad(sec%60);
+}
+setInterval(tick,1000);
+
+let pending=null;
+function stamp(){
+  if(!S.active){
+    S.active=truncMin(new Date()).toISOString();save();renderClock();
+    try{navigator.vibrate&&navigator.vibrate(80);}catch(e){}
+    toast("Eingestempelt um "+hm(new Date(S.active))+" Uhr");return;
+  }
+  const start=new Date(S.active),end=truncMin(new Date());
+  S.active=null;save();renderClock();
+  try{navigator.vibrate&&navigator.vibrate([60,60,60]);}catch(e){}
+  const o=overtime(start,end);
+  if(o.total<=0){toast("Ausgestempelt. Alles in deiner regulären Zeit.");return;}
+  openDialog(start,end,o);
+}
+function openDialog(start,end,o){
+  pending={start,end,o};
+  $("dlgMin").textContent=o.total+" Min";
+  const parts=[];if(o.early)parts.push("vor Dienstbeginn "+o.early+" Min");if(o.late)parts.push("nach Dienstschluss "+o.late+" Min");if(o.free)parts.push("am freien Tag "+o.free+" Min");
+  $("dlgDetail").textContent=dm(start)+" "+hm(start)+" bis "+hm(end)+" Uhr  ·  "+parts.join(", ");
+  $("dlgWhy").value="";$("dlg").hidden=false;setTimeout(()=>$("dlgWhy").focus(),50);
+}
+$("dlgSave").addEventListener("click",()=>{
+  const why=$("dlgWhy").value.trim();
+  if(!why){$("dlgWhy").focus();$("dlgWhy").placeholder="Bitte kurz den Grund eintragen";return;}
+  addEntry(pending.start,pending.end,pending.o,why);$("dlg").hidden=true;pending=null;toast("Überstunden gespeichert");
+});
+$("dlgSkip").addEventListener("click",()=>{$("dlg").hidden=true;pending=null;toast("Nicht gespeichert");});
+function addEntry(start,end,o,why){
+  S.entries.push({id:Date.now()+"",ym:ymKey(start),start:start.toISOString(),end:end.toISOString(),min:o.total,early:o.early,late:o.late,free:o.free,why});
+  S.entries.sort((a,b)=>a.start<b.start?-1:1);save();
+}
+$("stampBtn").addEventListener("click",stamp);
+$("cancelBtn").addEventListener("click",()=>{S.active=null;save();renderClock();toast("Stempel gelöscht");});
+
+/* Monat */
+let view=new Date();view.setDate(1);
+function monthEntries(){const k=ymKey(view);return S.entries.filter(x=>x.ym===k);}
+function mailBody(list){
+  const tot=list.reduce((a,x)=>a+x.min,0);
+  const lines=list.map(x=>{const s=new Date(x.start),e=new Date(x.end);return DAYS[s.getDay()]+" "+dm(s)+"  "+hm(s)+"–"+hm(e)+" Uhr  "+x.min+" Min  ("+x.why+")";});
+  return "Hallo,\n\nhier sind meine Überstunden für "+MONTHS[view.getMonth()]+" "+view.getFullYear()+":\n\n"+(lines.length?lines.join("\n"):"Keine Überstunden.")+
+    "\n\nInsgesamt: "+Math.floor(tot/60)+" Stunden und "+tot%60+" Minuten.\n\nViele Grüße\n"+(S.name||"");
+}
+function renderMonth(){
+  $("mTitle").textContent=MONTHS[view.getMonth()]+" "+view.getFullYear();
+  const list=monthEntries(),ul=$("list");ul.innerHTML="";
+  if(!list.length){const li=document.createElement("li");li.className="empty";li.style.display="block";li.textContent="Noch keine Überstunden in diesem Monat. Sie erscheinen hier, sobald du außerhalb deiner Zeiten ausstempelst.";ul.appendChild(li);}
+  list.forEach(x=>{
+    const s=new Date(x.start),e=new Date(x.end),li=document.createElement("li");
+    li.innerHTML='<div class="e-date"></div><div class="e-main"><div class="e-why"></div><div class="e-time"></div></div><div class="e-min"></div><button class="e-del" type="button">löschen</button>';
+    li.querySelector(".e-date").textContent=DAYS[s.getDay()]+" "+dm(s);
+    li.querySelector(".e-why").textContent=x.why;
+    li.querySelector(".e-time").textContent=hm(s)+"–"+hm(e)+" Uhr";
+    li.querySelector(".e-min").textContent=x.min+" Min";
+    const del=li.querySelector(".e-del");
+    del.addEventListener("click",()=>{
+      if(del.dataset.armed){S.entries=S.entries.filter(y=>y.id!==x.id);save();renderMonth();toast("Eintrag gelöscht");}
+      else{del.dataset.armed="1";del.textContent="wirklich löschen?";setTimeout(()=>{delete del.dataset.armed;del.textContent="löschen";},3000);}
+    });
+    ul.appendChild(li);
+  });
+  const tot=list.reduce((a,x)=>a+x.min,0);$("sum").textContent=fmtDur(tot);
+  $("mailText").textContent=mailBody(list);
+  const k=ymKey(view);$("sentInfo").hidden=!S.sent[k];
+  if(S.sent[k])$("sentInfo").textContent="Als gesendet markiert am "+S.sent[k];
+}
+$("prevM").addEventListener("click",()=>{view.setMonth(view.getMonth()-1);renderMonth();});
+$("nextM").addEventListener("click",()=>{view.setMonth(view.getMonth()+1);renderMonth();});
+function markSent(){const n=new Date();S.sent[ymKey(view)]=dm(n)+n.getFullYear();save();renderMonth();renderClock();}
+$("mailBtn").addEventListener("click",()=>{
+  if(!S.mail){toast("Bitte erst die Adresse des Sekretariats eintragen");show("einstellungen");return;}
+  const subj="Überstunden "+(S.name?S.name+" ":"")+"– "+MONTHS[view.getMonth()]+" "+view.getFullYear();
+  const a=document.createElement("a");
+  a.href="mailto:"+encodeURIComponent(S.mail)+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(mailBody(monthEntries()).replace(/\n/g,"\r\n"));
+  a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove();
+  markSent();toast("Mailprogramm wird geöffnet. Dort noch auf Senden tippen.");
+});
+async function copy(text,msg){
+  try{await navigator.clipboard.writeText(text);toast(msg);}
+  catch(e){const r=document.createRange();r.selectNodeContents($("mailText"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast("Text markiert. Jetzt über das Menü kopieren.");}
+}
+$("copyBtn").addEventListener("click",()=>{copy(mailBody(monthEntries()),"Text kopiert");markSent();});
+$("addForm").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  const d=$("addDate").value,f=$("addFrom").value,t=$("addTo").value,why=$("addWhy").value.trim();
+  if(!d||!f||!t||!why)return;
+  const start=new Date(d+"T"+f),end=new Date(d+"T"+t);if(end<=start)end.setDate(end.getDate()+1);
+  const o=overtime(start,end);
+  if(o.total<=0){toast("Diese Zeit liegt komplett in deinem regulären Dienst");return;}
+  addEntry(start,end,o,why);ev.target.reset();view=new Date(start.getFullYear(),start.getMonth(),1);renderMonth();toast(o.total+" Min nachgetragen");
+});
+
+/* Einstellungen */
+function renderSettings(){
+  $("sName").value=S.name;$("sMail").value=S.mail;
+  const w=$("week");w.innerHTML="";
+  ORDER.forEach(i=>{
+    const sc=S.sched[i],row=document.createElement("div");row.className="day"+(sc.on?"":" off");
+    row.innerHTML='<span class="dname">'+DAYS[i]+'</span><input type="checkbox" id="on'+i+'" aria-label="'+DAYS[i]+' Arbeitstag"'+(sc.on?" checked":"")+'><input type="time" id="s'+i+'" value="'+sc.s+'" aria-label="'+DAYS[i]+' Beginn"><input type="time" id="e'+i+'" value="'+sc.e+'" aria-label="'+DAYS[i]+' Ende">';
+    row.querySelector("input[type=checkbox]").addEventListener("change",ev=>row.classList.toggle("off",!ev.target.checked));
+    w.appendChild(row);
+  });
+  let base=location.href.split("#")[0];$("nfcLink").textContent=base+"#stempeln";
+}
+$("setForm").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  S.name=$("sName").value.trim();S.mail=$("sMail").value.trim();
+  ORDER.forEach(i=>{S.sched[i]={on:$("on"+i).checked,s:$("s"+i).value||"00:00",e:$("e"+i).value||"00:00"};});
+  S.configured=true;save();renderClock();toast("Gespeichert");show("stempeln");
+});
+$("nfcCopy").addEventListener("click",()=>{
+  const t=$("nfcLink").textContent;
+  navigator.clipboard.writeText(t).then(()=>toast("Link kopiert")).catch(()=>{const r=document.createRange();r.selectNodeContents($("nfcLink"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Link markiert");});
+});
+
+/* Start, auch über NFC-Link mit #stempeln */
+renderClock();
+function handleHash(){
+  if(location.hash==="#stempeln"){
+    try{history.replaceState(null,"",location.href.split("#")[0]);}catch(e){location.hash="";}
+    if(S.configured)stamp();else{show("einstellungen");toast("Bitte zuerst einrichten");}
+  }
+}
+handleHash();window.addEventListener("hashchange",handleHash);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)renderClock();});
+</script>
+
+</body></html>
